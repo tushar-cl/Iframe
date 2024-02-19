@@ -47,7 +47,7 @@ const v = new Vue({
       {label: 'Remarks', field: 'remarks'},
     ],
     data: [],
-    testData: "123"
+    testData: "1233"
   }
 });
 
@@ -59,6 +59,7 @@ const messageHandler = (event) => {
     const messageReceived = event.data;
     console.log(messageReceived);
     v.testData = JSON.stringify(messageReceived)
+    v.data = messageReceived
     //Add code to manipulate the received message
     }
 };

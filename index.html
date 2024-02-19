@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue Good Table Example</title>
+  <!-- Add Vue.js and specify a version of Vue Good Table -->
+  <link rel="stylesheet" href="https://unpkg.com/vue-good-table@2.21.1/dist/vue-good-table.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <script src="https://unpkg.com/vue-good-table@2.21.1/dist/vue-good-table.min.js"></script>
+</head>
+<body>
+
+<div id="app">
+  <vue-good-table
+    :columns="columns"
+    :rows="data"
+    :select-options="{
+      enabled: true,
+      selectOnCheckboxOnly: true,
+      disableSelectInfo: true,
+    }"
+    :pagination-options="{enabled: true}"
+  >
+  <template slot="table-row" slot-scope="props">
+    <span v-if="props.column.field == 'remarks'">
+      <input >
+    </span>
+    <span v-else>
+      {{props.formattedRow[props.column.field]}}
+    </span>
+  </template>
+</vue-good-table>
+<div>
+    Message: {{ testData }}
+</div>
+</div>
+
+<script>
+const v = new Vue({
+  el: '#app',
+  data: {
+    columns: [
+      {label: 'Checkbox', field: 'checkbox', type: 'checkbox'},
+      {label: 'ID', field: 'id'},
+      {label: 'Link', field: 'link'},
+      {label: 'Remarks', field: 'remarks'},
+    ],
+    data: [],
+    testData: "123"
+  }
+});
+
+//add this code in your app that you've embedded in Appsmith using the Iframe widget
+const messageHandler = (event) => {
+    //The message sent is available in the event object.
+    if(event) {
+    // Read the message by using the event.data property
+    const messageReceived = event.data;
+    console.log(messageReceived);
+    v.testData = JSON.stringify(messageReceived)
+    //Add code to manipulate the received message
+    }
+};
+
+//add the event listener to read the incoming message
+window.addEventListener('message', messageHandler);
+
+  // Remember to unlisten to the event when it's no longer needed
+  // For example, unlisten when you have successfully processed the message
+  // window.removeEventListener('message', messageHandler);
+
+</script>
+
+</body>
+</html>

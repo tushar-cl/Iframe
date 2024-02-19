@@ -59,7 +59,7 @@ const messageHandler = (event) => {
     const messageReceived = event.data;
     console.log(messageReceived);
     v.testData = JSON.stringify(messageReceived)
-    v.data = messageReceived
+    v.data = messageReceived.data
     //Add code to manipulate the received message
     }
 };

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,69 +10,209 @@
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <script src="https://unpkg.com/vue-good-table@2.21.1/dist/vue-good-table.min.js"></script>
 </head>
+
 <body>
 
-<div id="app">
-  <vue-good-table
-    :columns="columns"
-    :rows="data"
-    :select-options="{
-      enabled: true,
-      selectOnCheckboxOnly: true,
-      disableSelectInfo: true,
-    }"
-    :pagination-options="{enabled: true}"
-  >
-  <template slot="table-row" slot-scope="props">
-    <span v-if="props.column.field == 'remarks'">
-      <input >
-    </span>
-    <span v-else>
-      {{props.formattedRow[props.column.field]}}
-    </span>
-  </template>
-</vue-good-table>
-<div>
-    Message: {{ testData }}
-</div>
-</div>
+  <div id="app">
+    <vue-good-table 
+    :columns="columns" 
+    :rows="data" 
+    :sort-options="{enabled: false}" 
+    mode="remote">
+      <div slot="table-actions">
+        <button @click="onPageChange('prev')" :disabled="prevDisable">Prev</button>
+        <button @click="onPageChange('next')" :disabled="nextDisable">Next</button>
+      </div>
+      <template slot="table-row" slot-scope="props">
+        <span v-if="props.column.field == 'attributes.rejection_reason'">
+          <input v-if="props.row.attributes.status != 'Approved'" v-model="props.formattedRow[props.column.field]"
+            @change="changeText(props.formattedRow)" required>
+            <span v-else></span>
+        </span>
+        <span v-else-if="props.column.field == 'attributes.title'">
+          <span v-if="props.row.attributes.title != 'null' || !props.row.attributes.title">{{ props.row.attributes.title }}</span>
+          <span v-else></span>
+        </span>
+        <span v-else-if="props.column.field == 'attributes.description'">
+          <span v-if="props.row.attributes.description != 'null' || !props.row.attributes.description">{{ props.row.attributes.description }}</span>
+          <span v-else></span>
+        </span>
+        <span v-else-if="props.column.field == 'attributes.locality'">
+          <span v-if="props.row.attributes.locality != 'null' || !props.row.attributes.locality">{{ props.row.attributes.locality }}</span>
+          <span v-else></span>
+        </span>
+        <span v-else-if="props.column.field == 'attributes.tag'">
+          <span v-if="props.row.attributes.tag != 'null' || !props.row.attributes.tag">{{ props.row.attributes.tag }}</span>
+          <span v-else></span>
+        </span>
+        <span v-else-if="props.column.field == 'attributes.self_entry'">
+          <span v-if="props.row.attributes.self_entry">Self</span>
+          <span v-else>Someone else</span>
+        </span>
+        
+        <span v-else-if="props.column.field == 'delete'">
+          <button @click="deleteSubmission(props.row.id)">Delete</button>
+        </span>
 
-<script>
-const v = new Vue({
-  el: '#app',
-  data: {
-    columns: [
-      {label: 'Checkbox', field: 'checkbox', type: 'checkbox'},
-      {label: 'ID', field: 'id'},
-      {label: 'Link', field: 'link'},
-      {label: 'Remark', field: 'remarks'},
-    ],
-    data: [],
-    testData: "1233"
-  }
-});
+        <span v-else-if="props.column.field == 'attributes.users_permissions_user.data.attributes.gender'">
+          <span v-if="props.row.attributes.self_entry">{{ getGenderName(props.row.attributes?.users_permissions_user?.data?.attributes?.gender) }}</span>
+          <span v-else></span>
+        </span>
 
-//add this code in your app that you've embedded in Appsmith using the Iframe widget
-const messageHandler = (event) => {
-    //The message sent is available in the event object.
-    if(event) {
-    // Read the message by using the event.data property
-    const messageReceived = event.data;
-    console.log(messageReceived);
-    v.testData = JSON.stringify(messageReceived)
-    v.data = messageReceived.data
-    //Add code to manipulate the received message
-    }
-};
+        <span v-else-if="props.column.field == 'attributes.media_file_url'">
+          <span v-if="props.row.attributes.media_file_type =='link'"><a href="{{props.row.attributes.media_file_url}}">{{ props.row.attributes.media_file_url }}</a></span>
+          <span v-else-if="props.row.attributes.media_file_type =='audio'"><a href="https://ishine.s3.ap-south-1.amazonaws.com/{{props.row.attributes.media_file_url}}">https://ishine.s3.ap-south-1.amazonaws.com/{{ props.row.attributes.media_file_url }}</a></span>
+          <span v-else></span>
+        </span>
 
-//add the event listener to read the incoming message
-window.addEventListener('message', messageHandler);
+        <span v-else-if="props.column.label == 'Image/Video'">
+          <span v-if="props.row.attributes.media_file_type =='image'"><a href="https://ishine.s3.ap-south-1.amazonaws.com/{{props.row.attributes.media_file_url}}">https://ishine.s3.ap-south-1.amazonaws.com/{{ props.row.attributes.media_file_url }}</a></span>
+          <span v-else-if="props.row.attributes.media_file_type =='video'"><a href="https://ishine.s3.ap-south-1.amazonaws.com/{{props.row.attributes.media_file_url}}">https://ishine.s3.ap-south-1.amazonaws.com/{{ props.row.attributes.thumbnail_path }}</a></span>
+          <span v-else></span>
+        </span>
+        
+        <span v-else>
+          {{props.formattedRow[props.column.field]}}
+        </span>
+      </template>
+    </vue-good-table>
+    <div>
+      <button @click="OnSubmit">submit</button>
+      
+    </div>
+  </div>
 
-  // Remember to unlisten to the event when it's no longer needed
-  // For example, unlisten when you have successfully processed the message
-  // window.removeEventListener('message', messageHandler);
+  <script>
+    const v = new Vue({
+      el: '#app',
+      data: {
+        valueChanged: [],
+        prevDisable: true,
+        nextDisable: true,
+        approved_ids : [],
+        rejected_submissions:[],
+        totalRecords: 0,
+        pagination: {
+          page: 1 ,
+          pageSize: 10,
+        },
+        columns: [
+          { label: 'ID', field: 'id' },
+          { label: 'Remarks', field: 'attributes.rejection_reason' },
+          { label: 'User ID', field: 'attributes.user_id' },
+          { label: 'Image/Video', field: 'attributes.image/video' },
+          { label: 'Link/Audio', field: 'attributes.media_file_url' },
+          { label: 'Status', field: 'attributes.status' },
+          { label: 'Avereage Jury Score', field: 'attributes.avg_jury_score' },
+          { 
+            label: 'Date', 
+            field: 'attributes.createdAt',
+            type: "date",
+            dateInputFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSX",
+            dateOutputFormat: "dd/MM/yyyy",
+          },
+          { label: 'Title', field: 'attributes.title' },
+          { label: 'Description', field: 'attributes.description' },
+          { label: 'Locality', field: 'attributes.locality'},
+          { label: 'District', field: 'attributes.district'},
+          { label: 'State', field: 'attributes.state'},
+          { label: 'Name', field: 'attributes.users_permissions_user.data.attributes.name'},
+          { label: 'Email', field: 'attributes.users_permissions_user.data.attributes.email'},
+          { label: 'Mobile', field: 'attributes.users_permissions_user.data.attributes.mobile'},
+          { label: 'Age', field: 'attributes.age'},
+          { label: 'Gender', field: 'attributes.users_permissions_user.data.attributes.gender' },
+          { label: 'Category', field: 'attributes.category.data.attributes.name'},
+          { label: 'Relation', field: 'attributes.relation'},
+          { label: 'Photography tags', field: 'attributes.tag'},
+          { label: 'Media Type', field: 'attributes.media_file_type'},
+          { label: 'Self/Someone else?', field: 'attributes.self_entry'},
+          { label: 'Pincode', field: 'attributes.pincode'},
+          { label: 'Delete', field: 'delete'},
+        ],
+        data: [],
+        testData: "1232"
+      },
+      methods: {
+        deleteSubmission(id){
+          if (confirm(`Are you sure you want to delete this Submssion with id = ${id}?`)) {
+            window.parent.postMessage({delete: id, pageNo : this.pagination.page}, "*"); 
+      }
+        },
+        getGenderName: (gender) =>{
+          if(gender == 1) return "Male";
+          else if(gender == 2) return "Female";
+          else if(gender == 3) return "Others";
+          else if(gender == 4) return "I'd rather not specify";
+          else return null;
+        },
+        changeText(row) {
+          const index = this.data.findIndex(e => e.id == row.id)
+          this.data[index].attributes.rejection_reason = row['attributes.rejection_reason']
+        },
 
-</script>
+        OnSubmit() {
+          const approved_ids = [];
+          const unapproved_ids = [];
+
+          this.data.forEach(e => {
+            if (!e.attributes.rejection_reason) {
+              approved_ids.push(e.id);
+            } else {
+              unapproved_ids.push({ id: e.id, rejection_reason: e.attributes.rejection_reason });
+            }
+          });
+          console.log(approved_ids)
+          console.log(unapproved_ids)
+          window.parent.postMessage({submissionData: {approved_ids : approved_ids , unApproved_ids : unapproved_ids} , pageNo : this.pagination.page}, "*"); 
+        },
+        async onPageChange(params) {
+          this.valueChanged = []
+          const page = params == 'next' ? this.pagination.page + 1 : this.pagination.page - 1
+          if (this.pagination.pagecount >= page) {
+            this.nextDisable = false
+          }
+          else this.nextDisable = true
+          if (page > 1) {
+            this.prevDisable = false
+          }
+          else this.prevDisable = true
+
+          window.parent.postMessage({ pageNo: page, remark: this.valueChanged }, "*");
+
+        },
+      }
+    });
+
+    //add this code in your app that you've embedded in Appsmith using the Iframe widget
+    const messageHandler = async (event) => {
+      //The message sent is available in the event object.
+      if (event) {
+        // Read the message by using the event.data property
+        const messageReceived = event.data;
+        console.log(messageReceived);
+        v.testData = JSON.stringify(messageReceived.data.data)
+        if (messageReceived.from != 'appsmith') return
+        v.data = messageReceived.data.data
+        v.pagination = messageReceived.data.meta.pagination
+        if (v.pagination.pageCount > 1 && v.pagination.page < v.pagination.pageCount) {
+          v.nextDisable = false
+        }
+        else v.nextDisable = true
+        if (v.pagination.page > 1) [
+          v.prevDisable = false
+        ]
+        else v.prevDisable = true
+        // Add code to manipulate the received message
+      }
+    };
+    window.addEventListener('message', messageHandler);
+
+    // Remember to unlisten to the event when it's no longer needed
+    // For example, unlisten when you have successfully processed the message
+    // window.removeEventListener('message', messageHandler);
+
+  </script>
 
 </body>
+
 </html>
